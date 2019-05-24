@@ -1,0 +1,11 @@
+name: swim-explorer
+dependencies:
+  - python
+  - pytest
+  - pytest-cov
+  - bokeh
+  - geojson
+  - pip:
+      - git+ssh://git@bitbucket.org/antavelos-eurocontrol/subscription-manager-client.git
+      - git+ssh://git@bitbucket.org/antavelos-eurocontrol/swim-pubsub.git
+      - python-qpid_proton
