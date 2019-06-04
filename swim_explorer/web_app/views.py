@@ -28,5 +28,34 @@ http://opensource.org/licenses/BSD-3-Clause
 Details on EUROCONTROL: http://www.eurocontrol.int
 """
 
+from flask import render_template, send_from_directory, Blueprint
+
 __author__ = "EUROCONTROL (SWIM)"
 
+
+explorer_blueprint = Blueprint('explorer', __name__, template_folder='templates', static_folder='static')
+
+
+@explorer_blueprint.route("/")
+def index():
+   return render_template("index.html")
+
+
+@explorer_blueprint.route('/js/<path:path>')
+def send_js(path):
+    return send_from_directory('web_app/static/js', path)
+
+
+@explorer_blueprint.route('/css/<path:path>')
+def send_css(path):
+    return send_from_directory('web_app/static/css', path)
+
+
+@explorer_blueprint.route('/img/<path:path>')
+def send_img(path):
+    return send_from_directory('web_app/static/img', path)
+
+
+@explorer_blueprint.route('/favicon.ico')
+def favicon():
+    return send_from_directory('web_app/static/img', 'airplane.png', mimetype='image/png')

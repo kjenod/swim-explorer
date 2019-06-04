@@ -29,4 +29,3 @@ Details on EUROCONTROL: http://www.eurocontrol.int
 """
 
 __author__ = "EUROCONTROL (SWIM)"
-

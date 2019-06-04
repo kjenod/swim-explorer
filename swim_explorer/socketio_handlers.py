@@ -27,6 +27,57 @@ http://opensource.org/licenses/BSD-3-Clause
 
 Details on EUROCONTROL: http://www.eurocontrol.int
 """
+from collections import defaultdict
+from functools import partial
+
+from flask import request
+from flask_socketio import join_room, leave_room
 
 __author__ = "EUROCONTROL (SWIM)"
 
+
+TOPIC_ROOMS = defaultdict(list)
+
+
+def sub_handler(data, topic, sio):
+
+    data['topic'] = topic
+    sio.emit('data', data, room=topic)
+
+
+def on_subscribe(data, sio, sub_app):
+    topic = data['topic']
+
+    if not TOPIC_ROOMS[topic]:
+        sub_app.subscribe(topic, partial(sub_handler, topic=topic, sio=sio))
+
+    join_room(topic, sid=request.sid)
+
+    TOPIC_ROOMS[topic].append(request.sid)
+
+
+def on_unsubscribe(data, sub_app):
+    topic = data['topic']
+
+    TOPIC_ROOMS[topic].remove(request.sid)
+
+    leave_room(topic, sid=request.sid)
+
+    if not TOPIC_ROOMS[topic]:
+        sub_app.unsubscribe(topic)
+
+
+def on_disconnect(sub_app):
+    for topic, users in TOPIC_ROOMS.items():
+        if request.sid in users:
+            users.remove(request.sid)
+            leave_room(topic, sid=request.sid)
+            print(f"Removed {request.sid} from {topic}")
+
+        if not TOPIC_ROOMS[topic]:
+            sub_app.unsubscribe(topic)
+
+
+def on_connect(sio, sub_app):
+    topics = sub_app.get_topics()
+    sio.emit('topics', {'topics': topics})

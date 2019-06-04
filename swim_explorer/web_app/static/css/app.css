@@ -1,0 +1,25 @@
+
+html, body {
+    height: 100%;
+}
+
+#mapid {
+    height: 100%;
+}
+
+.container-fluid, .content{
+    height: 100%;
+}
+
+#sub-title {
+    text-align: center;
+}
+
+.play-pause {
+    color: #228BE6;
+    cursor: pointer;
+}
+
+.trash {
+    color: #F03E3E;
+}

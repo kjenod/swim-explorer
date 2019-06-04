@@ -3,9 +3,12 @@ dependencies:
   - python
   - pytest
   - pytest-cov
-  - bokeh
-  - geojson
+  - pyyaml
   - pip:
-      - git+ssh://git@bitbucket.org/antavelos-eurocontrol/subscription-manager-client.git
-      - git+ssh://git@bitbucket.org/antavelos-eurocontrol/swim-pubsub.git
-      - python-qpid_proton
+    - flask-socketio
+    - websockets
+    - geojson
+    - git+ssh://git@bitbucket.org/antavelos-eurocontrol/subscription-manager-client.git
+    - git+ssh://git@bitbucket.org/antavelos-eurocontrol/rest-client.git
+    - git+ssh://git@bitbucket.org/antavelos-eurocontrol/swim-pubsub.git
+    - python-qpid_proton
