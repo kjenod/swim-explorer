@@ -32,7 +32,7 @@ from functools import partial
 
 from flask import Flask
 from flask_socketio import SocketIO
-from swim_pubsub.subscriber.subscriber import SubscriberApp
+from swim_pubsub.core.factory import AppFactory
 
 from swim_explorer.web_app.views import explorer_blueprint
 from swim_explorer.socketio_handlers import on_subscribe, on_unsubscribe, on_connect, on_disconnect
@@ -40,17 +40,14 @@ from swim_explorer.socketio_handlers import on_subscribe, on_unsubscribe, on_con
 __author__ = "EUROCONTROL (SWIM)"
 
 
-def create_subscriber_app() -> SubscriberApp:
+def _get_config_path():
     current_dir = os.path.dirname(os.path.realpath(__file__))
-    app = SubscriberApp(os.path.join(current_dir, 'config.yml'))
+    return os.path.join(current_dir, 'config.yml')
 
-    while not app.is_running():
-        pass
 
-    return app
-
-# the subscriber app that gets data from the broker and interacts with subscription manager
-subscriber_app = create_subscriber_app()
+# the subscriber app and the subscriber that receives data from the broker and interacts with subscription manager
+subscriber_app = AppFactory.create_subscriber_app_from_config(_get_config_path())
+subscriber = subscriber_app.register_subscriber(username='test1', password='test')
 
 
 # the web app that renders the frontend
@@ -61,11 +58,18 @@ flask_app.register_blueprint(explorer_blueprint)
 # the SocketIO that sits in between the frontend and backend and redirects the data coming from the broker to the
 # frontend via socket.io
 sio = SocketIO(flask_app)
-sio.on_event('subscribe', partial(on_subscribe, sio=sio, sub_app=subscriber_app))
-sio.on_event('unsubscribe', partial(on_unsubscribe, sub_app=subscriber_app))
-sio.on_event('connect', partial(on_connect, sio=sio, sub_app=subscriber_app))
-sio.on_event('disconnect', partial(on_disconnect, sub_app=subscriber_app))
+sio.on_event('subscribe', partial(on_subscribe, sio=sio, subscriber=subscriber))
+sio.on_event('unsubscribe', partial(on_unsubscribe, subscriber=subscriber))
+sio.on_event('connect', partial(on_connect, sio=sio, subscriber=subscriber))
+sio.on_event('disconnect', partial(on_disconnect, subscriber=subscriber))
 
+
+def main():
+    # start the subscriber app in the background
+    subscriber_app.run(threaded=True)
+
+    # start the flask_socketio app
+    sio.run(flask_app)
 
 if __name__ == '__main__':
-    sio.run(flask_app)
+    main()

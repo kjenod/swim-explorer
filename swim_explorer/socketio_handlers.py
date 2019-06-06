@@ -45,18 +45,18 @@ def sub_handler(data, topic, sio):
     sio.emit('data', data, room=topic)
 
 
-def on_subscribe(data, sio, sub_app):
+def on_subscribe(data, sio, subscriber):
     topic = data['topic']
 
     if not TOPIC_ROOMS[topic]:
-        sub_app.subscribe(topic, partial(sub_handler, topic=topic, sio=sio))
+        subscriber.subscribe(topic, partial(sub_handler, topic=topic, sio=sio))
 
     join_room(topic, sid=request.sid)
 
     TOPIC_ROOMS[topic].append(request.sid)
 
 
-def on_unsubscribe(data, sub_app):
+def on_unsubscribe(data, subscriber):
     topic = data['topic']
 
     TOPIC_ROOMS[topic].remove(request.sid)
@@ -64,10 +64,10 @@ def on_unsubscribe(data, sub_app):
     leave_room(topic, sid=request.sid)
 
     if not TOPIC_ROOMS[topic]:
-        sub_app.unsubscribe(topic)
+        subscriber.unsubscribe(topic)
 
 
-def on_disconnect(sub_app):
+def on_disconnect(subscriber):
     for topic, users in TOPIC_ROOMS.items():
         if request.sid in users:
             users.remove(request.sid)
@@ -75,9 +75,9 @@ def on_disconnect(sub_app):
             print(f"Removed {request.sid} from {topic}")
 
         if not TOPIC_ROOMS[topic]:
-            sub_app.unsubscribe(topic)
+            subscriber.unsubscribe(topic)
 
 
-def on_connect(sio, sub_app):
-    topics = sub_app.get_topics()
+def on_connect(sio, subscriber):
+    topics = subscriber.get_topics()
     sio.emit('topics', {'topics': topics})
