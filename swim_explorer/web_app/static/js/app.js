@@ -30,8 +30,6 @@
     var myIcon = L.icon({
         iconUrl: '/img/airplane.png',
         iconSize: [20, 20],
-        iconAnchor: [22, 94],
-        popupAnchor: [-3, -76],
     });
 
     class Airplane {
@@ -47,10 +45,8 @@
         }
 
         getLastContactDateTime(secSinceEpoch) {
-            var d = new Date(0)
-
+            var d = new Date(0);
             d.setUTCSeconds(secSinceEpoch);
-
             return d
         }
 
@@ -94,7 +90,7 @@
         move(lat, lng, last_contact) {
             this.lat = lat;
             this.lng = lng;
-            this.last_contact = this.getLastContactDateTime(last_contact);;
+            this.last_contact = this.getLastContactDateTime(last_contact);
             var latlng = L.latLng(lat, lng);
             this.marker.setLatLng(latlng);
             this.marker.getPopup().setContent(this.getPopupContent());
