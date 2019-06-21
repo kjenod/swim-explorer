@@ -104,7 +104,7 @@
 
     var airplanesPerTopic = {};
 
-    var socket = io.connect('http://127.0.0.1:5000');
+    var socket = io.connect('http://0.0.0.0:5000');
 
     function refresh_flights(flight_data, topic) {
         if (!flight_data.lat || !flight_data.lng){

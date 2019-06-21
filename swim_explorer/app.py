@@ -32,7 +32,7 @@ from functools import partial
 
 from flask import Flask
 from flask_socketio import SocketIO
-from swim_pubsub.core.factory import AppFactory
+from swim_pubsub.subscriber import SubApp
 
 from swim_explorer.web_app.views import explorer_blueprint
 from swim_explorer.socketio_handlers import on_subscribe, on_unsubscribe, on_connect, on_disconnect
@@ -46,14 +46,14 @@ def _get_config_path():
 
 
 # the subscriber app and the subscriber that receives data from the broker and interacts with subscription manager
-subscriber_app = AppFactory.create_subscriber_app_from_config(_get_config_path())
-subscriber = subscriber_app.register_subscriber(username='test1', password='test')
+sub_app = SubApp.create_from_config(_get_config_path())
+subscriber = sub_app.register_subscriber(username=os.environ['SWIM_EXPLORER_USERNAME'],
+                                         password=os.environ['SWIM_EXPLORER_PASSWORD'])
 
 
 # the web app that renders the frontend
 flask_app = Flask(__name__)
 flask_app.register_blueprint(explorer_blueprint)
-
 
 # the SocketIO that sits in between the frontend and backend and redirects the data coming from the broker to the
 # frontend via socket.io
@@ -66,10 +66,10 @@ sio.on_event('disconnect', partial(on_disconnect, subscriber=subscriber))
 
 def main():
     # start the subscriber app in the background
-    subscriber_app.run(threaded=True)
+    sub_app.run(threaded=True)
 
     # start the flask_socketio app
-    sio.run(flask_app)
+    sio.run(flask_app, host="0.0.0.0")
 
 if __name__ == '__main__':
     main()

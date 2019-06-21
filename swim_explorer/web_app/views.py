@@ -27,18 +27,26 @@ http://opensource.org/licenses/BSD-3-Clause
 
 Details on EUROCONTROL: http://www.eurocontrol.int
 """
+import os
 
 from flask import render_template, send_from_directory, Blueprint
 
 __author__ = "EUROCONTROL (SWIM)"
 
+def _get_folder(name):
+    current_dir = os.path.dirname(os.path.realpath(__file__))
+    return os.path.join(current_dir, name)
 
-explorer_blueprint = Blueprint('explorer', __name__, template_folder='templates', static_folder='static')
+explorer_blueprint = Blueprint('explorer',
+                               __name__,
+                               template_folder='templates',
+                               static_folder='static')
 
 
 @explorer_blueprint.route("/")
 def index():
-   return render_template("index.html")
+    return send_from_directory('web_app/templates/', "index.html")
+    # return render_template("index.html")
 
 
 @explorer_blueprint.route('/js/<path:path>')
