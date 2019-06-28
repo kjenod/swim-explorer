@@ -5,6 +5,10 @@ dependencies:
   - pytest-cov
   - pyyaml
   - pip:
+    - uwsgi
+    - gevent
+    - gevent-websocket
+    - gunicorn
     - flask-socketio
     - websockets
     - geojson

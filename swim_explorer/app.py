@@ -47,6 +47,8 @@ def _get_config_path():
 
 # the subscriber app and the subscriber that receives data from the broker and interacts with subscription manager
 sub_app = SubApp.create_from_config(_get_config_path())
+# start the subscriber app in the background
+sub_app.run(threaded=True)
 subscriber = sub_app.register_subscriber(username=os.environ['SWIM_EXPLORER_USERNAME'],
                                          password=os.environ['SWIM_EXPLORER_PASSWORD'])
 
@@ -65,8 +67,6 @@ sio.on_event('disconnect', partial(on_disconnect, subscriber=subscriber))
 
 
 def main():
-    # start the subscriber app in the background
-    sub_app.run(threaded=True)
 
     # start the flask_socketio app
     sio.run(flask_app, host="0.0.0.0")
