@@ -153,8 +153,9 @@
             item.className = "list-group-item justify-content-between align-items-center";
             item.innerHTML = `
                 <div class="row">
-                    <div class="col-10">` + topic + `</div>
-                    <div class="col-2"><i class="fas fa-play play-pause" data-topic="` + topic + `"></i></div>
+                    <div class="col-9">` + topic + `</div>
+                    <div class="col-1"><i class="fas fa-play play-pause" data-topic="` + topic + `"></i></div>
+                    <div class="col-1"><i class="fas fa-trash-alt trash" data-topic=""></i></div>
                 </div>`;
             topics_ul.appendChild(item);
         })
@@ -162,6 +163,17 @@
         Array.from(document.getElementsByClassName('play-pause')).forEach(function(item) {
             item.onclick = onPlayPause;
         });
+
+
+        var topicsList = document.getElementById('topics-list');
+        event.topics.forEach(function(topic) {
+
+            var item = document.createElement('a');
+            item.href = "#";
+            item.className = "dropdown-item";
+            item.innerHTML = topic;
+            topicsList.appendChild(item);
+        })
     });
 
 
@@ -185,5 +197,13 @@
         }
     }
 
+    $(document).ready(function(){
+      $("#myInput").on("keyup", function() {
+        var value = $(this).val().toLowerCase();
+        $("#topics-list a").filter(function() {
+          $(this).toggle($(this).text().toLowerCase().indexOf(value) > -1)
+        });
+      });
+    });
 //	return self;
 //}(App || {}));
