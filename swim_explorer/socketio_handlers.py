@@ -27,6 +27,7 @@ http://opensource.org/licenses/BSD-3-Clause
 
 Details on EUROCONTROL: http://www.eurocontrol.int
 """
+import json
 from collections import defaultdict
 from functools import partial
 
@@ -39,9 +40,13 @@ __author__ = "EUROCONTROL (SWIM)"
 TOPIC_ROOMS = defaultdict(list)
 
 
-def sub_handler(data, topic, sio):
+def sub_handler(message, topic, sio):
 
-    data['topic'] = topic
+    data = {
+        'data': json.loads(message.body),
+        'topic': topic
+    }
+
     sio.emit('data', data, room=topic)
 
 
