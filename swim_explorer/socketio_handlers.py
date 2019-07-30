@@ -40,7 +40,7 @@ __author__ = "EUROCONTROL (SWIM)"
 TOPIC_ROOMS = defaultdict(list)
 
 
-def sub_handler(message, topic, sio):
+def broker_subscribe_handler(message, topic, sio):
 
     data = {
         'data': json.loads(message.body),
@@ -54,7 +54,7 @@ def on_subscribe(data, sio, subscriber):
     topic = data['topic']
 
     if not TOPIC_ROOMS[topic]:
-        subscriber.subscribe(topic, partial(sub_handler, topic=topic, sio=sio))
+        subscriber.subscribe(topic, partial(broker_subscribe_handler, topic=topic, sio=sio))
 
     join_room(topic, sid=request.sid)
 
@@ -70,6 +70,18 @@ def on_unsubscribe(data, subscriber):
 
     if not TOPIC_ROOMS[topic]:
         subscriber.unsubscribe(topic)
+
+
+def on_pause(data, subscriber):
+    topic = data['topic']
+
+    subscriber.pause(topic)
+
+
+def on_resume(data, subscriber):
+    topic = data['topic']
+
+    subscriber.resume(topic)
 
 
 def on_disconnect(subscriber):

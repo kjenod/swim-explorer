@@ -35,7 +35,7 @@ from flask_socketio import SocketIO
 from swim_pubsub.subscriber import SubApp
 
 from swim_explorer.web_app.views import explorer_blueprint
-from swim_explorer.socketio_handlers import on_subscribe, on_unsubscribe, on_connect, on_disconnect
+from swim_explorer.socketio_handlers import on_subscribe, on_unsubscribe, on_connect, on_disconnect, on_pause, on_resume
 
 __author__ = "EUROCONTROL (SWIM)"
 
@@ -62,6 +62,8 @@ flask_app.register_blueprint(explorer_blueprint)
 sio = SocketIO(flask_app)
 sio.on_event('subscribe', partial(on_subscribe, sio=sio, subscriber=subscriber))
 sio.on_event('unsubscribe', partial(on_unsubscribe, subscriber=subscriber))
+sio.on_event('pause', partial(on_pause, subscriber=subscriber))
+sio.on_event("resume", partial(on_resume, subscriber=subscriber))
 sio.on_event('connect', partial(on_connect, sio=sio, subscriber=subscriber))
 sio.on_event('disconnect', partial(on_disconnect, subscriber=subscriber))
 
