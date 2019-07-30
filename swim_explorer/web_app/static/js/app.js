@@ -135,31 +135,9 @@ function refreshFlights(flightData, topic) {
 
         subscription.airplanes.push(newAirplane);
     }
-
-//    var airplane = airplanes.find((airplane) => airplane.icao24 == flightData.icao24);
-//
-//    if (airplane) {
-//        airplane.move(flightData.lat, flightData.lng, flightData.last_contact);
-//    }
-//    else {
-//        var newAirplane = new Airplane(
-//            flightData.icao24,
-//            flightData.lat,
-//            flightData.lng,
-//            flightData.from,
-//            flightData.to,
-//            flightData.last_contact)
-//
-//        airplanes.push(newAirplane);
-//
-//        if (!(topic in airplanesPerTopic)) {
-//            airplanesPerTopic[topic] = []
-//        }
-//        airplanesPerTopic[topic].push(newAirplane);
-//    }
 }
 
-var socket = io.connect('http://0.0.0.0:5000');
+var socket = io.connect('http://localhost:5000');
 
 socket.on('data', function (event) {
     if (!subscriptionsList.topicMatchesActiveSubscription(event.topic)){
