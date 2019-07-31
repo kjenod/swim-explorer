@@ -13,7 +13,37 @@ class Subscription {
         this.id = id;
         this.topic = topic;
         this.paused = false;
+        this.loading = true;
         this.airplanes = [];
+    }
+
+    refreshFlights(flightData) {
+        flightData.forEach((airplaneData) => {
+            if (!airplaneData.lat || !airplaneData.lng){
+                return;
+            }
+
+            var airplane = this.airplanes.find((airplane) => airplane.icao24 == airplaneData.icao24);
+
+            if (airplane) {
+                airplane.move(airplaneData.lat, airplaneData.lng, airplaneData.last_contact);
+            }
+            else {
+                var newAirplane = new Airplane(
+                    airplaneData.icao24,
+                    airplaneData.lat,
+                    airplaneData.lng,
+                    airplaneData.from,
+                    airplaneData.to,
+                    airplaneData.last_contact)
+
+                this.airplanes.push(newAirplane);
+            }
+        });
+
+        if (this.loading) {
+            this.loading = false;
+        }
     }
 }
 
@@ -46,7 +76,10 @@ Vue.component('subscription-item', {
   template: '<li class="subscriptions-item list-group-item justify-content-between align-items-center list-group-item-success" title="Pause">'+
                 '<div class="row">' +
                     '<div class="col-10 subscriptions-item-name" v-on:click="pauseResume(subscription)">{{ subscription.topic }}</div>' +
-                    '<div class="col-2"><i v-on:click="unsubscribe(subscription)" class="fas fa-trash trash" data-topic="" title="Unsubscribe"></i></div>' +
+                    '<div class="col-2">' +
+                    '<i v-if="subscription.loading" class="fas fa-spinner fa-spin trash" title="Loading..."></i>' +
+                    '<i v-else="subscription.loading" v-on:click="unsubscribe(subscription)" class="fas fa-trash trash" title="Unsubscribe"></i>' +
+                    '</div>' +
                 '</div>' +
             '</li>',
     methods: {
@@ -112,38 +145,17 @@ var subscriptionsList = new Vue({
     }
 })
 
-function refreshFlights(flightData, topic) {
-    if (!flightData.lat || !flightData.lng){
-        return;
-    }
-
-    var subscription = subscriptionsList.getSubscriptionByTopic(topic)
-
-    var airplane = subscription.airplanes.find((airplane) => airplane.icao24 == flightData.icao24);
-
-    if (airplane) {
-        airplane.move(flightData.lat, flightData.lng, flightData.last_contact);
-    }
-    else {
-        var newAirplane = new Airplane(
-            flightData.icao24,
-            flightData.lat,
-            flightData.lng,
-            flightData.from,
-            flightData.to,
-            flightData.last_contact)
-
-        subscription.airplanes.push(newAirplane);
-    }
-}
 
 var socket = io.connect('http://localhost:5000');
 
 socket.on('data', function (event) {
-    if (!subscriptionsList.topicMatchesActiveSubscription(event.topic)){
+    var subscription = subscriptionsList.getSubscriptionByTopic(event.topic)
+
+    if (!subscription || subscription.paused) {
         return;
     }
-    event.data.forEach((flightData) => refreshFlights(flightData, event.topic));
+
+    subscription.refreshFlights(event.data);
 });
 
 socket.on('topics', function(event) {
