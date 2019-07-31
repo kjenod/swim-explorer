@@ -35,6 +35,11 @@ var inactiveAirplaneIcon = L.icon({
     iconSize: [10, 10],
 });
 
+var highlightedAirplaneIcon = L.icon({
+    iconUrl: '/img/blue2.png',
+    iconSize: [10, 10],
+});
+
 class Airplane {
     constructor(icao24, lat, lng, from, to, last_contact){
         this.icao24 = icao24;
@@ -113,8 +118,8 @@ class Airplane {
     remove() {
         this.marker.remove();
     }
+
+    highlight() {
+        this.marker.setIcon(highlightedAirplaneIcon);
+    }
 }
-
-var airplanes = [];
-
-var airplanesPerTopic = {};

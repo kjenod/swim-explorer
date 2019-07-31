@@ -73,7 +73,9 @@ var topicsList = new Vue({
 
 Vue.component('subscription-item', {
   props: ['subscription'],
-  template: '<li class="subscriptions-item list-group-item justify-content-between align-items-center list-group-item-success" title="Pause">'+
+  template: '<li class="subscriptions-item list-group-item justify-content-between align-items-center list-group-item-success" title="Pause"' +
+                'v-on:mouseenter="highlightAirplanes(subscription)" ' +
+                'v-on:mouseleave="unhighlightAirplanes(subscription)">' +
                 '<div class="row">' +
                     '<div class="col-10 subscriptions-item-name" v-on:click="pauseResume(subscription)">{{ subscription.topic }}</div>' +
                     '<div class="col-2">' +
@@ -112,6 +114,14 @@ Vue.component('subscription-item', {
                 subscription.paused = true;
                 subscription.airplanes.forEach((airplane) => airplane.pause());
             }
+        },
+        highlightAirplanes: function(subscription) {
+            subscription.airplanes.forEach((airplane) => airplane.highlight());
+        },
+        unhighlightAirplanes: function(subscription) {
+            subscription.airplanes.forEach((airplane) => {
+                subscription.paused ? airplane.pause() : airplane.resume();
+            });
         }
     }
 })
