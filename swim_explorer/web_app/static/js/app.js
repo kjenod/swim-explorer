@@ -74,8 +74,8 @@ var topicsList = new Vue({
 Vue.component('subscription-item', {
   props: ['subscription'],
   template: '<li class="subscriptions-item list-group-item justify-content-between align-items-center list-group-item-success" title="Pause"' +
-                'v-on:mouseenter="highlightAirplanes(subscription)" ' +
-                'v-on:mouseleave="unhighlightAirplanes(subscription)">' +
+                'v-on:mouseenter="highlight(subscription)" ' +
+                'v-on:mouseleave="unhighlight(subscription)">' +
                 '<div class="row">' +
                     '<div class="col-10 subscriptions-item-name" v-on:click="pauseResume(subscription)">{{ subscription.topic }}</div>' +
                     '<div class="col-2">' +
@@ -115,10 +115,20 @@ Vue.component('subscription-item', {
                 subscription.airplanes.forEach((airplane) => airplane.pause());
             }
         },
-        highlightAirplanes: function(subscription) {
+        highlight: function(subscription) {
+            var classToRemove = subscription.paused ? 'list-group-item-danger' : 'list-group-item-success';
+
+            this.$el.classList.remove(classToRemove);
+            this.$el.classList.add('list-group-item-primary');
+
             subscription.airplanes.forEach((airplane) => airplane.highlight());
         },
-        unhighlightAirplanes: function(subscription) {
+        unhighlight: function(subscription) {
+            var classToAdd = subscription.paused ? 'list-group-item-danger' : 'list-group-item-success';
+
+            this.$el.classList.remove('list-group-item-primary');
+            this.$el.classList.add(classToAdd);
+
             subscription.airplanes.forEach((airplane) => {
                 subscription.paused ? airplane.pause() : airplane.resume();
             });
