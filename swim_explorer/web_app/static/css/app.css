@@ -15,15 +15,6 @@ html, body {
     text-align: center;
 }
 
-.play-pause {
-    color: #228BE6;
-    cursor: pointer;
-}
-
-.trash {
-    cursor: pointer;
-}
-
 #myInput {
     padding: 20px;
     margin-top: -6px;

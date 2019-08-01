@@ -73,14 +73,17 @@ var topicsList = new Vue({
 
 Vue.component('subscription-item', {
   props: ['subscription'],
-  template: '<li class="subscriptions-item list-group-item justify-content-between align-items-center list-group-item-success" title="Pause"' +
-                'v-on:mouseenter="highlight(subscription)" ' +
-                'v-on:mouseleave="unhighlight(subscription)">' +
+  template: '<li class="subscriptions-item list-group-item justify-content-between align-items-center list-group-item-light">' +
                 '<div class="row">' +
-                    '<div class="col-10 subscriptions-item-name" v-on:click="pauseResume(subscription)">{{ subscription.topic }}</div>' +
-                    '<div class="col-2">' +
-                    '<i v-if="subscription.loading" class="fas fa-spinner fa-spin trash" title="Loading..."></i>' +
-                    '<i v-else="subscription.loading" v-on:click="unsubscribe(subscription)" class="fas fa-trash trash" title="Unsubscribe"></i>' +
+                        '<div class="btn-group" role="group" aria-label="Actions">' +
+                          '<button type="button" class="btn btn-light" v-on:click="pauseResume(subscription)">' +
+                            '<i v-if="subscription.loading" class="fas fa-spinner fa-spin trash" title="Loading..."></i>' +
+                            '<i v-else="subscription.loading" class="fas fa-pause play-pause" title="Pause" ref="playPause"></i>' +
+                          '</button>' +
+                          '<button type="button" class="btn btn-light" v-on:click="unsubscribe(subscription)">' +
+                            '<i class="fas fa-sign-out-alt" title="Unsubscribe"></i>' +
+                          '</button>' +
+                          '<button type="button" class="btn btn-light" ref="subscriptionText" v-on:mousedown="highlight(subscription)" v-on:mouseup="unhighlight(subscription)">{{ subscription.topic }}</button>' +
                     '</div>' +
                 '</div>' +
             '</li>',
@@ -97,9 +100,9 @@ Vue.component('subscription-item', {
             if (subscription.paused) {
                 socket.emit('resume', {topic: subscription.topic})
 
-                this.$el.classList.remove('list-group-item-danger');
-                this.$el.classList.add('list-group-item-success');
-                this.$el.title = 'Pause';
+                this.$refs.playPause.classList.remove('fa-play')
+                this.$refs.playPause.classList.add('fa-pause')
+                this.$refs.playPause.title = 'Pause';
 
                 subscription.paused = false;
                 subscription.airplanes.forEach((airplane) => airplane.resume());
@@ -107,28 +110,18 @@ Vue.component('subscription-item', {
             else {
                 socket.emit('pause', {topic: subscription.topic})
 
-                this.$el.classList.remove('list-group-item-success');
-                this.$el.classList.add('list-group-item-danger');
-                this.$el.title = 'Resume';
+                this.$refs.playPause.classList.remove('fa-pause')
+                this.$refs.playPause.classList.add('fa-play')
+                this.$refs.playPause.title = 'Resume';
 
                 subscription.paused = true;
                 subscription.airplanes.forEach((airplane) => airplane.pause());
             }
         },
         highlight: function(subscription) {
-            var classToRemove = subscription.paused ? 'list-group-item-danger' : 'list-group-item-success';
-
-            this.$el.classList.remove(classToRemove);
-            this.$el.classList.add('list-group-item-primary');
-
             subscription.airplanes.forEach((airplane) => airplane.highlight());
         },
         unhighlight: function(subscription) {
-            var classToAdd = subscription.paused ? 'list-group-item-danger' : 'list-group-item-success';
-
-            this.$el.classList.remove('list-group-item-primary');
-            this.$el.classList.add(classToAdd);
-
             subscription.airplanes.forEach((airplane) => {
                 subscription.paused ? airplane.pause() : airplane.resume();
             });
@@ -139,20 +132,14 @@ Vue.component('subscription-item', {
 var subscriptionsList = new Vue({
     el: '#subscriptions-list',
     data: {
-        subscriptions: [],
-        footnoteSeen: false
+        subscriptions: []
     },
     methods: {
-        updateFootnoteSeen: function() {
-            this.footnoteSeen = this.subscriptions.length > 0;
-        },
         add: function(subscription){
             this.subscriptions.push(subscription)
-            this.updateFootnoteSeen()
         },
         remove: function(subscription) {
             this.subscriptions.splice(this.subscriptions.indexOf(subscription), 1)
-            this.updateFootnoteSeen()
         },
         topicMatchesActiveSubscription: function(topic) {
             var activeSubscriptions = this.subscriptions.filter((sub) => !sub.paused);
