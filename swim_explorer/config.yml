@@ -27,11 +27,12 @@ LOGGING:
 
 BROKER:
   host: '0.0.0.0:5671'
-  tls_enabled: true
-  cert_db: '/secrets/ca_certificate.pem'
-  cert_file: '/secrets/client_certificate.pem'
-  cert_key: '/secrets/client_key.pem'
-  cert_password: 'swim-ti'
+  cert_db: '/secrets/rabbitmq/ca_certificate.pem'
+  #  cert_file: '/secrets/broker/client/client_certificate.pem'
+  #  cert_key: '/secrets/broker/client/client_key.pem'
+  #  cert_password: ${BROKER_CERT_PASSWORD}
+  sasl_user: 'ny-consumer'
+  sasl_password: 'ny'
 
 SUBSCRIPTION-MANAGER:
   host: 'localhost:8080'
