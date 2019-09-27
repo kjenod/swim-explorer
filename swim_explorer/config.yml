@@ -30,7 +30,7 @@ BROKER:
   cert_db: '/secrets/rabbitmq/ca_certificate.pem'
   #  cert_file: '/secrets/broker/client/client_certificate.pem'
   #  cert_key: '/secrets/broker/client/client_key.pem'
-  #  cert_password: ${BROKER_CERT_PASSWORD}
+  #  cert_password: ${BROKER_CERT_PASS}
   sasl_user: 'ny-consumer'
   sasl_password: 'ny'
 
@@ -40,5 +40,5 @@ SUBSCRIPTION-MANAGER:
   timeout: 30
   verify: false
 
-SWIM_EXPLORER_USERNAME: 'swim-explorer'
-SWIM_EXPLORER_PASSWORD: 'swim-explorer'
+SWIM_EXPLORER_USER: 'swim-explorer'
+SWIM_EXPLORER_PASS: 'swim-explorer'

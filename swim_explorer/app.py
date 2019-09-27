@@ -49,8 +49,8 @@ def _get_config_path():
 sub_app = SubApp.create_from_config(_get_config_path())
 # start the subscriber app in the background
 sub_app.run(threaded=True)
-subscriber = sub_app.register_subscriber(username=sub_app.config['SWIM_EXPLORER_USERNAME'],
-                                         password=sub_app.config['SWIM_EXPLORER_PASSWORD'])
+subscriber = sub_app.register_subscriber(username=sub_app.config['SWIM_EXPLORER_USER'],
+                                         password=sub_app.config['SWIM_EXPLORER_PASS'])
 
 
 # the web app that renders the frontend
