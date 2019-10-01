@@ -28,9 +28,6 @@ LOGGING:
 BROKER:
   host: '0.0.0.0:5671'
   cert_db: '/secrets/rabbitmq/ca_certificate.pem'
-  #  cert_file: '/secrets/broker/client/client_certificate.pem'
-  #  cert_key: '/secrets/broker/client/client_key.pem'
-  #  cert_password: ${BROKER_CERT_PASS}
   sasl_user: 'ny-consumer'
   sasl_password: 'ny'
 
