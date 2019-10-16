@@ -38,4 +38,4 @@ SUBSCRIPTION-MANAGER:
   verify: false
 
 SWIM_EXPLORER_SM_USER: 'swim-explorer'
-SWIM_EXPLORER_PASS: 'swim-explorer'
+SWIM_EXPLORER_SM_PASS: 'swim-explorer'
