@@ -237,6 +237,9 @@ $(document).ready(function(){
                         topicsList.add(new Topic(topic.id, topic.name))
                     })
                 }
+                result.subscriptions.forEach(function(subscription) {
+                    subscriptionsList.add(new Subscription(subscription.id, subscription.topic, subscription.active));
+                });
             }
 
             // setup polling

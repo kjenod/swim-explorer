@@ -35,6 +35,7 @@ from pkg_resources import resource_filename
 from pubsub_facades.swim_pubsub import SWIMSubscriber
 from swim_backend.config import load_app_config
 
+from swim_explorer.subscription_manager import preload_swim_subscriber
 from swim_explorer.web_app.views import explorer_blueprint
 
 __author__ = "EUROCONTROL (SWIM)"
@@ -58,6 +59,7 @@ with app.app_context():
     app.swim_subscriber = SWIMSubscriber.create_from_config(_get_config_path())
     app.swim_subscriber.run(threaded=True)
 
+    preload_swim_subscriber(app.swim_subscriber)
 
 if __name__ == '__main__':
     app.run(host="0.0.0.0", port=5000)

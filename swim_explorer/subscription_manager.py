@@ -32,12 +32,13 @@ __author__ = "EUROCONTROL (SWIM)"
 
 import json
 import logging
-from functools import wraps
+from functools import wraps, partial
 from typing import List
 
 import proton
 from flask import current_app
-from subscription_manager_client.models import Topic
+from pubsub_facades.swim_pubsub import SWIMSubscriber
+from subscription_manager_client.models import Topic, Subscription
 from subscription_manager_client.subscription_manager import SubscriptionManagerClient
 from rest_client.errors import APIError
 from swim_backend.local import AppContextProxy
@@ -70,6 +71,10 @@ def get_topics() -> List[Topic]:
     return sm_client.get_topics()
 
 
+def get_subscriptions() -> List[Subscription]:
+    return sm_client.get_subscriptions()
+
+
 def handle_sm_response(f):
     @wraps(f)
     def decorator(*args, **kwargs):
@@ -86,5 +91,33 @@ def handle_sm_response(f):
                 'status': 'NOK',
                 'error': e.detail
             }
+        except Exception as e:
+            _logger.error(str(e))
+            response = {
+                'status': 'NOK',
+                'error': str(e)
+            }
         return response
     return decorator
+
+
+def preload_swim_subscriber(subscriber: SWIMSubscriber):
+    """
+    Fetches the existing subscriptions and creates the necessary AMQP1.0 receivers on their queues
+    NOTE: to be used upon app initialization
+    :param subscriber:
+    """
+    subscriptions = get_subscriptions()
+
+    for subscription in subscriptions:
+
+        # keep the subscription id in memory
+        cache.save_subscription(topic=subscription.topic.name, subscription=subscription)
+
+        subscriber.preload_queue_message_consumer(
+            queue=subscription.queue,
+            message_consumer=partial(swim_subscriber_message_consumer,
+                                     topic=subscription.topic.name)
+        )
+
+        _logger.info(f'Added message_consumer for queue {subscription.queue}')

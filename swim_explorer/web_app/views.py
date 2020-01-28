@@ -35,7 +35,8 @@ from typing import List, Dict, Any
 from flask import send_from_directory, Blueprint, current_app as app
 
 from swim_explorer import cache
-from swim_explorer.subscription_manager import handle_sm_response, get_topics, swim_subscriber_message_consumer
+from swim_explorer.subscription_manager import handle_sm_response, get_topics, swim_subscriber_message_consumer, \
+    get_subscriptions
 
 __author__ = "EUROCONTROL (SWIM)"
 
@@ -95,9 +96,27 @@ def init() -> Dict[str, Any]:
     :return:
     """
     topics = get_topics()
+    subscriptions = get_subscriptions()
+
+    subscribed_topics = [subscription.topic for subscription in subscriptions]
+    not_subscribed_topics = [topic for topic in topics if topic not in subscribed_topics]
 
     return {
-        'topics': [{'id': topic.id, 'name': topic.name} for topic in topics],
+        'subscriptions': [
+            {
+                'id': subscription.id,
+                'topic': subscription.topic.name,
+                'active': subscription.active
+            }
+            for subscription in subscriptions
+        ],
+        'topics': [
+            {
+                'id': topic.id,
+                'name': topic.name
+            }
+            for topic in not_subscribed_topics
+        ],
         'polling_interval': app.config['POLLING_INTERVAL_IN_SEC'] * 1000
     }
 
