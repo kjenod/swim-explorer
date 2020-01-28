@@ -1,5 +1,5 @@
 """
-Copyright 2019 EUROCONTROL
+Copyright 2020 EUROCONTROL
 ==========================================
 
 Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
@@ -27,79 +27,41 @@ http://opensource.org/licenses/BSD-3-Clause
 
 Details on EUROCONTROL: http://www.eurocontrol.int
 """
-import json
-from collections import defaultdict
-from functools import partial
-from typing import List
-
-from flask import request
-from flask_socketio import join_room, leave_room
 
 __author__ = "EUROCONTROL (SWIM)"
 
-from subscription_manager_client.models import Topic
+from typing import Dict, Any
 
-TOPIC_ROOMS = defaultdict(list)
-
-
-def broker_subscribe_handler(message, topic, sio):
-
-    data = {
-        'data': json.loads(message.body),
-        'topic': topic
-    }
-
-    sio.emit('data', data, room=topic)
+from subscription_manager_client.models import Subscription
 
 
-def on_subscribe(data, sio, subscriber):
-    topic = data['topic']
+""" Holds the subscription ids in memory in order to be passed in front-end upon message reception"""
+SUBSCRIPTIONS: Dict[str, Subscription] = {}
 
-    if not TOPIC_ROOMS[topic]:
-        subscriber.subscribe(topic, partial(broker_subscribe_handler, topic=topic, sio=sio))
-
-    join_room(topic, sid=request.sid)
-
-    TOPIC_ROOMS[topic].append(request.sid)
+""" Holds the messages coming from the broker until they are picked up upon front-end polling"""
+MESSAGE_QUEUE = []
 
 
-def on_unsubscribe(data, subscriber):
-    topic = data['topic']
-
-    TOPIC_ROOMS[topic].remove(request.sid)
-
-    leave_room(topic, sid=request.sid)
-
-    if not TOPIC_ROOMS[topic]:
-        subscriber.unsubscribe(topic)
+def get_subscription(topic: str) -> Subscription:
+    return SUBSCRIPTIONS[topic]
 
 
-def on_pause(data, subscriber):
-    topic = data['topic']
-
-    subscriber.pause(topic)
+def save_subscription(topic: str, subscription: Subscription) -> None:
+    SUBSCRIPTIONS[topic] = subscription
 
 
-def on_resume(data, subscriber):
-    topic = data['topic']
-
-    subscriber.resume(topic)
+def delete_subscription(topic: str) -> Subscription:
+    return SUBSCRIPTIONS.pop(topic)
 
 
-def on_disconnect(subscriber):
-    for topic, users in TOPIC_ROOMS.items():
-        if request.sid in users:
-            users.remove(request.sid)
-            leave_room(topic, sid=request.sid)
-            print(f"Removed {request.sid} from {topic}")
-
-        if not TOPIC_ROOMS[topic]:
-            subscriber.unsubscribe(topic)
+def add_queue_message(message: Dict[str, Any]) -> None:
+    MESSAGE_QUEUE.append(message)
 
 
-def on_connect(sio, subscriber):
-    topics: List[Topic] = subscriber.get_topics()
+def remove_queue_message() -> Dict[str, Any]:
+    try:
+        message = MESSAGE_QUEUE.pop(0)
+    except IndexError:
+        message = {}
 
-    topic_names = [topic.name for topic in topics]
-
-    sio.emit('topics', {'topics': topic_names})
+    return message

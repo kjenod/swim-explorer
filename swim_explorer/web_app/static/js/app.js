@@ -9,10 +9,10 @@ class Topic {
 }
 
 class Subscription {
-    constructor(id, topic) {
+    constructor(id, topic, active) {
         this.id = id;
         this.topic = topic;
-        this.paused = false;
+        this.active = active;
         this.loading = true;
         this.airplanes = [];
     }
@@ -54,9 +54,24 @@ var topicsList = new Vue({
   },
   methods: {
     subscribeToTopic: function(topic) {
-        socket.emit('subscribe', {topic: topic.name});
-        subscriptionsList.add(new Subscription(topic.id, topic.name));
-        this.remove(topic);
+        self = this;
+        $.ajax({
+                type: "GET",
+                url: "/subscribe/" + topic.name,
+                dataType : "json",
+                contentType: "application/json; charset=utf-8",
+                success : function(result) {
+
+                    if (result.status == 'NOK') {
+                        console.log(result.error)
+                        showError("Failed to subscribe");
+                    }
+                    else {
+                        subscriptionsList.add(new Subscription(result.id, result.topic, result.active));
+                        self.remove(topic);
+                    }
+                },
+            });
     },
     remove: function(topic) {
         this.topics.splice(this.topics.indexOf(topic), 1);
@@ -89,33 +104,71 @@ Vue.component('subscription-item', {
             '</li>',
     methods: {
         unsubscribe: function(subscription) {
-            socket.emit('unsubscribe', {topic: subscription.topic})
 
-            topicsList.add(new Topic(subscription.id, subscription.topic))
-            subscriptionsList.remove(subscription)
+            $.ajax({
+                type: "GET",
+                url: "/unsubscribe/" + subscription.topic,
+                dataType : "json",
+                contentType: "application/json; charset=utf-8",
+                success : function(result) {
+                    if (result.status == 'NOK') {
+                        console.log(result.error)
+                        showError("Failed to unsubscribe");
+                    }
+                    else {
+                        topicsList.add(new Topic(subscription.id, subscription.topic))
+                        subscriptionsList.remove(subscription)
 
-            subscription.airplanes.forEach((airplane) => airplane.remove());
+                        subscription.airplanes.forEach((airplane) => airplane.remove());
+                    }
+                },
+            });
         },
         pauseResume: function(subscription) {
-            if (subscription.paused) {
-                socket.emit('resume', {topic: subscription.topic})
+            self = this;
+            if (subscription.active) {
+                $.ajax({
+                    type: "GET",
+                    url: "/pause/" + subscription.topic,
+                    dataType : "json",
+                    contentType: "application/json; charset=utf-8",
+                    success : function(result) {
+                        if (result.status == 'NOK') {
+                            console.log(result.error)
+                            showError("Failed to pause subscription");
+                        }
+                        else {
+                            subscription.active = result.active;
+                            self.$refs.playPause.classList.remove('fa-pause')
+                            self.$refs.playPause.classList.add('fa-play')
+                            self.$refs.playPause.title = 'Resume';
 
-                this.$refs.playPause.classList.remove('fa-play')
-                this.$refs.playPause.classList.add('fa-pause')
-                this.$refs.playPause.title = 'Pause';
-
-                subscription.paused = false;
-                subscription.airplanes.forEach((airplane) => airplane.resume());
+                            subscription.airplanes.forEach((airplane) => airplane.pause());
+                        }
+                    },
+                });
             }
             else {
-                socket.emit('pause', {topic: subscription.topic})
+                $.ajax({
+                    type: "GET",
+                    url: "/resume/" + subscription.topic,
+                    dataType : "json",
+                    contentType: "application/json; charset=utf-8",
+                    success : function(result) {
+                        if (result.status == 'NOK') {
+                            console.log(result.error)
+                            showError("Failed to resume subscription");
+                        }
+                        else {
+                            subscription.active = result.active;
+                            self.$refs.playPause.classList.remove('fa-play')
+                            self.$refs.playPause.classList.add('fa-pause')
+                            self.$refs.playPause.title = 'Pause';
 
-                this.$refs.playPause.classList.remove('fa-pause')
-                this.$refs.playPause.classList.add('fa-play')
-                this.$refs.playPause.title = 'Resume';
-
-                subscription.paused = true;
-                subscription.airplanes.forEach((airplane) => airplane.pause());
+                            subscription.airplanes.forEach((airplane) => airplane.resume());
+                        }
+                    },
+                });
             }
         },
         highlight: function(subscription) {
@@ -123,7 +176,7 @@ Vue.component('subscription-item', {
         },
         unhighlight: function(subscription) {
             subscription.airplanes.forEach((airplane) => {
-                subscription.paused ? airplane.pause() : airplane.resume();
+                subscription.active ? airplane.resume() : airplane.pause();
             });
         }
     }
@@ -142,7 +195,7 @@ var subscriptionsList = new Vue({
             this.subscriptions.splice(this.subscriptions.indexOf(subscription), 1)
         },
         topicMatchesActiveSubscription: function(topic) {
-            var activeSubscriptions = this.subscriptions.filter((sub) => !sub.paused);
+            var activeSubscriptions = this.subscriptions.filter((sub) => sub.active);
 
             return activeSubscriptions.map((sub) => sub.topic).includes(topic);
         },
@@ -153,32 +206,62 @@ var subscriptionsList = new Vue({
 })
 
 
-var socket = io.connect('http://localhost:5000');
+function showError(errorText) {
+    $("#errorModal").find(".modal-body").html("<p>" + errorText + "</p>");
+    $("#errorModal").modal('toggle');
+}
 
-socket.on('data', function (event) {
-    var subscription = subscriptionsList.getSubscriptionByTopic(event.topic)
-
-    if (!subscription || subscription.paused) {
-        return;
-    }
-
-    subscription.refreshFlights(event.data);
-});
-
-socket.on('topics', function(event) {
-    if (!topicsList.topics.length > 0) {
-        event.topics.forEach(function(topicName, id) {
-            topicsList.add(new Topic(id, topicName))
-        })
-    }
-});
 
 $(document).ready(function(){
-  $("#myInput").on("keyup", function() {
-    var value = $(this).val().toLowerCase();
-    $("#topics-list a").filter(function() {
-      $(this).toggle($(this).text().toLowerCase().indexOf(value) > -1)
+    $("#myInput").on("keyup", function() {
+        var value = $(this).val().toLowerCase();
+        $("#topics-list a").filter(function() {
+            $(this).toggle($(this).text().toLowerCase().indexOf(value) > -1)
+        });
     });
-  });
+
+
+    $.ajax({
+        type: "GET",
+        url: "/init",
+        dataType : "json",
+        contentType: "application/json; charset=utf-8",
+        success : function(result) {
+            if (result.status == 'NOK') {
+                console.log(result.error)
+                showError("Failed to load Topics");
+            }
+            else {
+                if (!topicsList.topics.length > 0) {
+                    result.topics.forEach(function(topic) {
+                        topicsList.add(new Topic(topic.id, topic.name))
+                    })
+                }
+            }
+
+            // setup polling
+            setInterval(
+                function(){
+                    $.ajax({
+                        type: "GET",
+                        url: "/poll",
+                        dataType : "json",
+                        contentType: "application/json; charset=utf-8",
+                        success : function(result) {
+
+                            var subscription = subscriptionsList.getSubscriptionByTopic(result.topic)
+
+                            if (!subscription || !subscription.active) {
+                                return;
+                            }
+
+                            subscription.refreshFlights(result.data);
+                        },
+                    });
+                },
+                result.polling_interval
+            );
+        },
+    });
 });
 
